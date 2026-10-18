@@ -1,0 +1,589 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Periodic Lab — Bảng tuần hoàn tương tác</title>
+<style>
+:root{
+ --bg:#0b1020;--panel:#141c30;--panel2:#1b2640;--text:#edf3ff;
+ --muted:#aab7d0;--line:#33415e;--accent:#7dd3fc;--green:#86efac;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+ font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{padding:28px 5%;background:linear-gradient(120deg,#17264a,#102e40)}
+h1{margin:0;font-size:clamp(28px,4vw,42px)}
+h2{margin:0 0 12px;font-size:21px}
+h3{margin:16px 0 8px}
+p{margin:7px 0}
+.sub{color:#c3d7ef;max-width:850px}
+main{max-width:1600px;margin:auto;padding:20px}
+.panel{background:var(--panel);border:1px solid var(--line);
+ border-radius:15px;padding:16px;margin:0 0 18px;min-width:0}
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+input,select,button{font:inherit;border-radius:9px;padding:10px 12px}
+input,select{background:#0d1528;color:var(--text);border:1px solid var(--line)}
+button{cursor:pointer;background:#213452;color:var(--text);border:1px solid #496184}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent)}
+.table-wrap{overflow-x:auto;padding-bottom:8px}
+.periodic{display:grid;grid-template-columns:repeat(18,minmax(58px,1fr));gap:5px;min-width:1120px}
+.element{position:relative;min-height:75px;text-align:left;padding:5px;
+ border-radius:8px;color:#101827;border:2px solid transparent;overflow:hidden}
+.element:hover{transform:translateY(-2px)}
+.element.selected{outline:3px solid white;border-color:#0b1020}
+.element .z{font-size:10px;display:block}
+.element .sym{font-size:22px;font-weight:800;display:block;line-height:1.2}
+.element .en{font-size:10px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.element .mass{font-size:9px;display:block}
+.placeholder{min-height:75px;display:flex;align-items:center;justify-content:center;
+ color:var(--muted);font-size:10px;text-align:center;border:1px dashed var(--line);border-radius:8px}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.legend span{font-size:12px;border:1px solid var(--line);padding:4px 8px;border-radius:7px}
+.alkali{background:#f6a6a6}.alkaline{background:#ffd28a}
+.transition{background:#f5b5e6}.post{background:#b7c8fc}
+.metalloid{background:#a9e7d4}.nonmetal{background:#b8e3a0}
+.halogen{background:#ffe69a}.noble{background:#b8dfff}
+.lanthanide{background:#e6c3ff}.actinide{background:#e9b7a8}
+.unknown{background:#c7d2fe}
+.detail-head{display:grid;grid-template-columns:120px 1fr;gap:18px;align-items:center}
+.big-symbol{font-size:64px;font-weight:850;text-align:center;line-height:1.15}
+.big-z{text-align:center;color:var(--muted)}
+.pills{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}
+.pill{font-size:12px;background:var(--panel2);border:1px solid var(--line);
+ padding:4px 9px;border-radius:999px}
+.info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.mini{background:#0d1528;border:1px solid var(--line);padding:13px;border-radius:12px;min-width:0}
+.muted{color:var(--muted)}
+.config{font:15px/1.8 ui-monospace,SFMono-Regular,monospace;overflow-wrap:anywhere;color:#a7f3d0}
+.shell-list{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0}
+.shell-list span{background:#223753;padding:5px 9px;border-radius:7px}
+.bohr-layout{display:grid;grid-template-columns:minmax(240px,1fr) minmax(150px,1fr);
+ gap:12px;align-items:center}
+svg{width:100%;max-width:340px;display:block;margin:auto}
+.orbit{fill:none;stroke:#60789b;stroke-width:1.4}
+.electron{fill:#7dd3fc;stroke:#e0f2fe;stroke-width:.5}
+.nucleus{fill:#fda4af;stroke:#ffe4e6;stroke-width:1.5}
+.quiz-q{padding:12px 0;border-bottom:1px solid var(--line)}
+.quiz-q:last-child{border-bottom:0}
+.options{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.options button{font-size:13px}
+.options button.correct{background:#14532d;border-color:#86efac}
+.options button.wrong{background:#7f1d1d;border-color:#fca5a5}
+.result{font-weight:700;color:var(--green);margin-top:10px}
+footer{color:var(--muted);font-size:12px;padding:10px 0 30px}
+a{color:var(--accent);overflow-wrap:anywhere}
+.link-list{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.note{border-left:3px solid var(--accent);padding:8px 12px;background:#101b30}
+@media(max-width:720px){
+ main{padding:12px}.info-grid{grid-template-columns:1fr}
+ .detail-head{grid-template-columns:85px 1fr}.big-symbol{font-size:48px}
+ .bohr-layout{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+ <h1>⚛ Periodic Lab</h1>
+ <p class="sub">Phòng học bảng tuần hoàn tương tác — khám phá 118 nguyên tố, cấu hình electron,
+ mô hình Bohr, ứng dụng và câu hỏi luyện tập.</p>
+</header>
+<main>
+ <section class="panel">
+  <h2>1. Bảng tuần hoàn</h2>
+  <p class="muted">Chọn một nguyên tố để xem hồ sơ. Dùng tìm kiếm để tra cứu theo tên, ký hiệu hoặc số hiệu nguyên tử.</p>
+  <div class="controls">
+   <input id="search" placeholder="Tìm H, Oxygen, 8..." aria-label="Tìm nguyên tố">
+   <select id="filter" aria-label="Lọc loại nguyên tố">
+    <option value="all">Tất cả nguyên tố</option>
+    <option value="alkali">Kim loại kiềm</option>
+    <option value="alkaline">Kim loại kiềm thổ</option>
+    <option value="transition">Kim loại chuyển tiếp</option>
+    <option value="post">Kim loại hậu chuyển tiếp</option>
+    <option value="metalloid">Á kim</option>
+    <option value="nonmetal">Phi kim khác</option>
+    <option value="halogen">Halogen</option>
+    <option value="noble">Khí hiếm</option>
+    <option value="lanthanide">Họ Lanthanide</option>
+    <option value="actinide">Họ Actinide</option>
+    <option value="unknown">Chưa phân loại chắc chắn</option>
+   </select>
+   <button id="reset">Hiện tất cả</button>
+  </div>
+  <div class="legend">
+   <span class="alkali">Kim loại kiềm</span><span class="alkaline">Kiềm thổ</span>
+   <span class="transition">Chuyển tiếp</span><span class="post">Hậu chuyển tiếp</span>
+   <span class="metalloid">Á kim</span><span class="nonmetal">Phi kim</span>
+   <span class="halogen">Halogen</span><span class="noble">Khí hiếm</span>
+   <span class="lanthanide">Lanthanide</span><span class="actinide">Actinide</span>
+  </div>
+  <div class="table-wrap"><div class="periodic" id="periodic"></div></div>
+  <p class="muted">Hai hàng riêng phía dưới bảng là Lanthanide và Actinide để bảng dễ quan sát hơn.</p>
+ </section>
+
+ <section class="panel" id="details">
+  <h2>Chọn một nguyên tố để bắt đầu</h2>
+  <p class="muted">Bạn sẽ thấy thông tin nguyên tố, cấu hình electron, sơ đồ Bohr và 5 câu hỏi tương tác.</p>
+ </section>
+
+ <footer>
+  Periodic Lab là công cụ học tập. Thông tin cấu hình của một số nguyên tố nặng có thể dựa trên dự đoán lý thuyết.
+  Không thực hiện thí nghiệm với hóa chất nguy hiểm hoặc nguyên tố phóng xạ.
+ </footer>
+</main>
+<script>
+"use strict";
+
+/* Dữ liệu: số hiệu, ký hiệu, tên tiếng Anh, tên tiếng Việt, khối lượng nguyên tử,
+   nhóm, chu kỳ. Với nguyên tố phóng xạ không có đồng vị bền, khối lượng thường là số khối
+   của đồng vị được ghi nhận/ước tính phổ biến. */
+const raw = `
+1|H|Hydrogen|Hiđro|1.008|1|1
+2|He|Helium|Heli|4.0026|18|1
+3|Li|Lithium|Liti|6.94|1|2
+4|Be|Beryllium|Berili|9.0122|2|2
+5|B|Boron|Bo|10.81|13|2
+6|C|Carbon|Cacbon|12.011|14|2
+7|N|Nitrogen|Nitơ|14.007|15|2
+8|O|Oxygen|Oxi|15.999|16|2
+9|F|Fluorine|Flo|18.998|17|2
+10|Ne|Neon|Neon|20.180|18|2
+11|Na|Sodium|Natri|22.990|1|3
+12|Mg|Magnesium|Magiê|24.305|2|3
+13|Al|Aluminium|Nhôm|26.982|13|3
+14|Si|Silicon|Silic|28.085|14|3
+15|P|Phosphorus|Photpho|30.974|15|3
+16|S|Sulfur|Lưu huỳnh|32.06|16|3
+17|Cl|Chlorine|Clo|35.45|17|3
+18|Ar|Argon|Argon|39.948|18|3
+19|K|Potassium|Kali|39.098|1|4
+20|Ca|Calcium|Canxi|40.078|2|4
+21|Sc|Scandium|Scandi|44.956|3|4
+22|Ti|Titanium|Titan|47.867|4|4
+23|V|Vanadium|Vanadi|50.942|5|4
+24|Cr|Chromium|Crom|51.996|6|4
+25|Mn|Manganese|Mangan|54.938|7|4
+26|Fe|Iron|Sắt|55.845|8|4
+27|Co|Cobalt|Coban|58.933|9|4
+28|Ni|Nickel|Niken|58.693|10|4
+29|Cu|Copper|Đồng|63.546|11|4
+30|Zn|Zinc|Kẽm|65.38|12|4
+31|Ga|Gallium|Gali|69.723|13|4
+32|Ge|Germanium|Gecmani|72.630|14|4
+33|As|Arsenic|Asen|74.922|15|4
+34|Se|Selenium|Selen|78.971|16|4
+35|Br|Bromine|Brom|79.904|17|4
+36|Kr|Krypton|Kripton|83.798|18|4
+37|Rb|Rubidium|Rubidi|85.468|1|5
+38|Sr|Strontium|Stronti|87.62|2|5
+39|Y|Yttrium|Ytri|88.906|3|5
+40|Zr|Zirconium|Zirconi|91.224|4|5
+41|Nb|Niobium|Niobi|92.906|5|5
+42|Mo|Molybdenum|Molypden|95.95|6|5
+43|Tc|Technetium|Tecneti|98|7|5
+44|Ru|Ruthenium|Ruteni|101.07|8|5
+45|Rh|Rhodium|Rhodi|102.91|9|5
+46|Pd|Palladium|Paladi|106.42|10|5
+47|Ag|Silver|Bạc|107.87|11|5
+48|Cd|Cadmium|Cadimi|112.41|12|5
+49|In|Indium|Indi|114.82|13|5
+50|Sn|Tin|Thiếc|118.71|14|5
+51|Sb|Antimony|Antimon|121.76|15|5
+52|Te|Tellurium|Telua|127.60|16|5
+53|I|Iodine|Iốt|126.90|17|5
+54|Xe|Xenon|Xenon|131.29|18|5
+55|Cs|Caesium|Xesi|132.91|1|6
+56|Ba|Barium|Bari|137.33|2|6
+57|La|Lanthanum|Lantan|138.91|3|6
+58|Ce|Cerium|Xeri|140.12|3|6
+59|Pr|Praseodymium|Praseodymi|140.91|3|6
+60|Nd|Neodymium|Neodymi|144.24|3|6
+61|Pm|Promethium|Prometi|145|3|6
+62|Sm|Samarium|Samari|150.36|3|6
+63|Eu|Europium|Europi|151.96|3|6
+64|Gd|Gadolinium|Gadolini|157.25|3|6
+65|Tb|Terbium|Terbi|158.93|3|6
+66|Dy|Dysprosium|Dysprosi|162.50|3|6
+67|Ho|Holmium|Holmi|164.93|3|6
+68|Er|Erbium|Erbi|167.26|3|6
+69|Tm|Thulium|Tuli|168.93|3|6
+70|Yb|Ytterbium|Ytterbi|173.05|3|6
+71|Lu|Lutetium|Luteti|174.97|3|6
+72|Hf|Hafnium|Hafni|178.49|4|6
+73|Ta|Tantalum|Tantan|180.95|5|6
+74|W|Tungsten|Vonfram|183.84|6|6
+75|Re|Rhenium|Rheni|186.21|7|6
+76|Os|Osmium|Osmi|190.23|8|6
+77|Ir|Iridium|Iridi|192.22|9|6
+78|Pt|Platinum|Bạch kim|195.08|10|6
+79|Au|Gold|Vàng|196.97|11|6
+80|Hg|Mercury|Thủy ngân|200.59|12|6
+81|Tl|Thallium|Tali|204.38|13|6
+82|Pb|Lead|Chì|207.2|14|6
+83|Bi|Bismuth|Bitmut|208.98|15|6
+84|Po|Polonium|Poloni|209|16|6
+85|At|Astatine|Astatin|210|17|6
+86|Rn|Radon|Radon|222|18|6
+87|Fr|Francium|Franxi|223|1|7
+88|Ra|Radium|Radi|226|2|7
+89|Ac|Actinium|Actini|227|3|7
+90|Th|Thorium|Thori|232.04|3|7
+91|Pa|Protactinium|Protactini|231.04|3|7
+92|U|Uranium|Urani|238.03|3|7
+93|Np|Neptunium|Neptuni|237|3|7
+94|Pu|Plutonium|Plutoni|244|3|7
+95|Am|Americium|Americi|243|3|7
+96|Cm|Curium|Curi|247|3|7
+97|Bk|Berkelium|Berkeli|247|3|7
+98|Cf|Californium|Californi|251|3|7
+99|Es|Einsteinium|Einsteini|252|3|7
+100|Fm|Fermium|Fermi|257|3|7
+101|Md|Mendelevium|Mendelevi|258|3|7
+102|No|Nobelium|Nobeli|259|3|7
+103|Lr|Lawrencium|Lawrenci|266|3|7
+104|Rf|Rutherfordium|Rutherfordi|267|4|7
+105|Db|Dubnium|Dubni|268|5|7
+106|Sg|Seaborgium|Seaborgi|269|6|7
+107|Bh|Bohrium|Bohri|270|7|7
+108|Hs|Hassium|Hassi|277|8|7
+109|Mt|Meitnerium|Meitneri|278|9|7
+110|Ds|Darmstadtium|Darmstadti|281|10|7
+111|Rg|Roentgenium|Roentgeni|282|11|7
+112|Cn|Copernicium|Copernixi|285|12|7
+113|Nh|Nihonium|Nihoni|286|13|7
+114|Fl|Flerovium|Flerovi|289|14|7
+115|Mc|Moscovium|Moscovi|290|15|7
+116|Lv|Livermorium|Livermori|293|16|7
+117|Ts|Tennessine|Tennessin|294|17|7
+118|Og|Oganesson|Oganesson|294|18|7
+`.trim();
+
+const elements=raw.split("\n").map(line=>{
+ const [z,sym,name,vi,mass,group,period]=line.split("|");
+ return {z:+z,sym,name,vi,mass:+mass,group:+group,period:+period};
+});
+const byZ=Object.fromEntries(elements.map(e=>[e.z,e]));
+const $=id=>document.getElementById(id);
+let current=null,quizAnswers=[],quizScore=0;
+
+/* Phân loại tổng quát. Một số nguyên tố, nhất là vùng kim loại hậu chuyển tiếp,
+   có thể được phân loại khác nhau tùy tài liệu. */
+function category(e){
+ const z=e.z,g=e.group;
+ if(z===1)return "nonmetal";
+ if(z===2)return "noble";
+ if(z===3||z===11||z===19||z===37||z===55||z===87)return "alkali";
+ if(z===4||z===12||z===20||z===38||z===56||z===88)return "alkaline";
+ if(z>=57&&z<=71)return "lanthanide";
+ if(z>=89&&z<=103)return "actinide";
+ if(g===18)return "noble";
+ if(g===17)return "halogen";
+ if(g>=3&&g<=12)return "transition";
+ if([5,14,32,33,51,52,85].includes(z))return "metalloid";
+ if([13,31,49,50,81,82,83,84,113,114,115,116].includes(z))return "post";
+ if([6,7,8,9,15,16,34,35,53].includes(z))return g===17?"halogen":"nonmetal";
+ if(z>=104)return "unknown";
+ return "post";
+}
+const categoryNames={
+ alkali:"Kim loại kiềm",alkaline:"Kim loại kiềm thổ",
+ transition:"Kim loại chuyển tiếp",post:"Kim loại hậu chuyển tiếp",
+ metalloid:"Á kim",nonmetal:"Phi kim",halogen:"Halogen",
+ noble:"Khí hiếm",lanthanide:"Lanthanide",actinide:"Actinide",
+ unknown:"Chưa phân loại chắc chắn"
+};
+function position(e){
+ if(e.z>=58&&e.z<=71)return {row:8,col:e.z-54};
+ if(e.z>=90&&e.z<=103)return {row:9,col:e.z-86};
+ return {row:e.period,col:e.group};
+}
+function makeTable(){
+ const table=$("periodic");
+ table.innerHTML="";
+ for(const e of elements){
+  const pos=position(e),c=category(e);
+  const b=document.createElement("button");
+  b.className="element "+c;
+  b.style.gridRow=pos.row;b.style.gridColumn=pos.col;
+  b.dataset.z=e.z;
+  b.innerHTML=`<span class="z">${e.z}</span><span class="sym">${e.sym}</span>
+    <span class="en">${e.name}</span><span class="mass">${e.mass}</span>`;
+  b.title=`${e.z} — ${e.name} (${e.vi})`;
+  b.addEventListener("click",()=>showElement(e.z));
+  table.appendChild(b);
+ }
+ for(let g=1;g<=18;g++){
+  const p=document.createElement("div");
+  p.className="placeholder";p.style.gridRow=8;p.style.gridColumn=g;
+  if(g===3)p.textContent="Lanthanide →";
+  table.appendChild(p);
+  const q=document.createElement("div");
+  q.className="placeholder";q.style.gridRow=9;q.style.gridColumn=g;
+  if(g===3)q.textContent="Actinide →";
+  table.appendChild(q);
+ }
+}
+function filterTable(){
+ const query=$("search").value.trim().toLowerCase();
+ const filter=$("filter").value;
+ document.querySelectorAll(".element").forEach(b=>{
+  const e=byZ[+b.dataset.z],c=category(e);
+  const matches=!query||String(e.z)===query||e.sym.toLowerCase().includes(query)
+    ||e.name.toLowerCase().includes(query)||e.vi.toLowerCase().includes(query);
+  b.style.display=matches&&(filter==="all"||c===filter)?"":"none";
+ });
+}
+$("search").addEventListener("input",filterTable);
+$("filter").addEventListener("change",filterTable);
+$("reset").addEventListener("click",()=>{
+ $("search").value="";$("filter").value="all";filterTable();
+});
+
+/* Thứ tự điền orbital theo quy tắc Aufbau. Dùng quy tắc gần đúng và sửa một số
+   ngoại lệ thường gặp. Các nguyên tố siêu nặng có cấu hình dự đoán. */
+const orbitals=[
+ ["1s",2],["2s",2],["2p",6],["3s",2],["3p",6],["4s",2],
+ ["3d",10],["4p",6],["5s",2],["4d",10],["5p",6],["6s",2],
+ ["4f",14],["5d",10],["6p",6],["7s",2],["5f",14],["6d",10],["7p",6]
+];
+/* [electron chuyển từ orbital, electron chuyển đến orbital, số electron] */
+const exceptions={
+ 24:[["4s","3d",1]],29:[["4s","3d",1]],
+ 41:[["5s","4d",1]],42:[["5s","4d",1]],
+ 44:[["5s","4d",1]],45:[["5s","4d",1]],
+ 46:[["5s","4d",2]],47:[["5s","4d",1]],
+ 57:[["4f","5d",1]],58:[["4f","5d",1]],
+ 64:[["4f","5d",1]],78:[["6s","5d",1]],
+ 79:[["6s","5d",1]],89:[["5f","6d",1]],
+ 90:[["5f","6d",2]],91:[["5f","6d",1]],
+ 92:[["5f","6d",1]],93:[["5f","6d",1]],
+ 96:[["5f","6d",1]],103:[["6d","7p",1]]
+};
+function getConfiguration(z){
+ const occ={};
+ let left=z;
+ for(const [orb,cap] of orbitals){
+  const n=Math.min(cap,left);
+  if(n>0)occ[orb]=n;
+  left-=n;
+  if(left<=0)break;
+ }
+ for(const [from,to,n] of (exceptions[z]||[])){
+  if((occ[from]||0)>=n){
+   occ[from]-=n;occ[to]=(occ[to]||0)+n;
+  }
+ }
+ return {occ,order:orbitals.map(x=>x[0]).filter(o=>(occ[o]||0)>0)};
+}
+const superscript={"0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
+function sup(n){return String(n).split("").map(x=>superscript[x]).join("");}
+function configText(data){
+ return data.order.map(o=>o+sup(data.occ[o])).join(" ");
+}
+function shellsFromConfig(data){
+ const shells={};
+ for(const orb of data.order){
+  const n=+orb[0];shells[n]=(shells[n]||0)+data.occ[orb];
+ }
+ return Object.keys(shells).sort((a,b)=>a-b).map(n=>shells[n]);
+}
+function drawBohr(e,shells){
+ const cx=150,cy=150;
+ const radii=[24,43,62,81,100,119,138];
+ let svg=`<svg viewBox="0 0 300 300" role="img" aria-label="Mô hình Bohr của ${e.name}">`;
+ shells.forEach((count,i)=>{
+  const r=radii[i];
+  svg+=`<circle class="orbit" cx="${cx}" cy="${cy}" r="${r}"/>`;
+  for(let j=0;j<count;j++){
+   const angle=(2*Math.PI*j/count)-Math.PI/2+(i%2)*0.15;
+   const x=cx+r*Math.cos(angle),y=cy+r*Math.sin(angle);
+   svg+=`<circle class="electron" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.1"/>`;
+  }
+ });
+ svg+=`<circle class="nucleus" cx="${cx}" cy="${cy}" r="11"/>
+ <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="10" fill="#301018">${e.sym}</text>
+ </svg>`;
+ return svg;
+}
+function getValence(shells){return shells[shells.length-1]||0;}
+function linksFor(e){
+ const q=encodeURIComponent(e.name+" element");
+ const video="https://www.youtube.com/results?search_query="+q+" explained";
+ const image="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search="+q;
+ const wiki="https://en.wikipedia.org/wiki/"+encodeURIComponent(e.name);
+ return {video,image,wiki};
+}
+function application(e){
+ const c=category(e);
+ const specific={
+  1:"Hydrogen được nghiên cứu trong pin nhiên liệu và sản xuất hóa chất.",
+  2:"Helium dùng trong thiết bị làm lạnh chuyên dụng và một số hệ thống khoa học.",
+  6:"Carbon là nền tảng của hóa học hữu cơ; kim cương và graphite có các ứng dụng khác nhau.",
+  7:"Nitrogen được dùng để tạo môi trường trơ và sản xuất phân bón.",
+  8:"Oxygen cần thiết cho hô hấp và được dùng trong y tế, luyện kim.",
+  11:"Sodium và các hợp chất của nó có nhiều ứng dụng công nghiệp; kim loại sodium phản ứng mạnh với nước.",
+  14:"Silicon là vật liệu quan trọng trong chất bán dẫn và sản xuất kính.",
+  17:"Các hợp chất chlorine được dùng để khử trùng nước trong điều kiện kiểm soát.",
+  26:"Sắt là thành phần chính của thép, được dùng trong xây dựng và máy móc.",
+  29:"Đồng dẫn điện tốt, thường dùng trong dây dẫn và linh kiện điện.",
+  79:"Vàng được dùng trong trang sức, điện tử và một số ứng dụng y khoa.",
+  80:"Thủy ngân độc hại; các ứng dụng truyền thống bị hạn chế hoặc thay thế vì rủi ro sức khỏe.",
+  92:"Uranium được dùng làm nhiên liệu trong một số lò phản ứng hạt nhân và cần kiểm soát nghiêm ngặt."
+ };
+ if(specific[e.z])return specific[e.z];
+ if(c==="noble")return "Khí hiếm có độ phản ứng thấp trong nhiều điều kiện; một số được dùng trong chiếu sáng hoặc môi trường bảo vệ.";
+ if(c==="halogen")return "Halogen và hợp chất của chúng có ứng dụng trong hóa chất, vật liệu và xử lý nước; cần tuân thủ quy tắc an toàn.";
+ if(c==="lanthanide")return "Một số nguyên tố họ Lanthanide được dùng trong nam châm mạnh, màn hình và vật liệu quang học.";
+ if(c==="actinide")return "Nhiều nguyên tố họ Actinide có tính phóng xạ; chủ yếu được nghiên cứu trong khoa học hạt nhân.";
+ if(c==="transition")return "Kim loại chuyển tiếp thường được dùng trong hợp kim, chất xúc tác, thiết bị điện hoặc công nghệ vật liệu.";
+ if(c==="metalloid")return "Á kim có tính chất trung gian giữa kim loại và phi kim; một số được dùng trong bán dẫn.";
+ if(c==="alkali"||c==="alkaline")return "Kim loại nhóm này có ứng dụng trong hóa chất và vật liệu; một số phản ứng mạnh nên không được tự thử nghiệm.";
+ return "Nguyên tố này được nghiên cứu trong hóa học, khoa học vật liệu hoặc công nghệ chuyên dụng. Ứng dụng cụ thể phụ thuộc vào dạng hợp chất và điều kiện sử dụng.";
+}
+function safeActivity(e){
+ const c=category(e);
+ if([11,19,37,55,87,4,12,20,38,56,88,9,17,35,53,80].includes(e.z))
+  return "Không tự làm thí nghiệm với nguyên tố này. Hãy quan sát ảnh, video mô phỏng hoặc dữ liệu đáng tin cậy; không chạm hay trộn hóa chất.";
+ if(e.z===26)return "Quan sát một vật bằng thép hoặc sắt khô. Ghi lại màu sắc, độ cứng cảm nhận qua quan sát và các dấu hiệu gỉ nếu có.";
+ if(e.z===29)return "Quan sát dây đồng hoặc một đồng xu màu đồng. Không cạo, đốt hay dùng hóa chất làm sạch.";
+ if(e.z===6)return "So sánh hình ảnh graphite trong ruột bút chì và kim cương; ghi lại khác biệt về cấu trúc và ứng dụng.";
+ if(e.z===13)return "Quan sát một vật bằng nhôm sạch như vỏ lon đã rửa. Không cắt vật sắc cạnh.";
+ if(c==="noble")return "Quan sát ảnh ống phóng điện hoặc biển quảng cáo phát sáng; không tự tháo thiết bị điện.";
+ if(c==="lanthanide"||c==="actinide")return "Dùng hình ảnh, video hoặc mô hình 3D. Không tìm kiếm, thu thập hay xử lý mẫu nguyên tố.";
+ return "Tìm một vật liệu hoặc sản phẩm thường ngày có liên quan đến nguyên tố này. Đọc nhãn hoặc nguồn khoa học và ghi lại ứng dụng; không đốt, nếm hoặc trộn vật liệu.";
+}
+function shuffle(a){
+ for(let i=a.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];
+ }
+ return a;
+}
+function questionBank(e,shells){
+ const other=elements.filter(x=>x.z!==e.z);
+ const wrongZ=shuffle(other).slice(0,3).map(x=>String(x.z));
+ const wrongSym=shuffle(other).slice(0,3).map(x=>x.sym);
+ const wrongP=shuffle([1,2,3,4,5,6,7].filter(x=>x!==e.period)).slice(0,3).map(String);
+ const wrongG=shuffle([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18].filter(x=>x!==e.group)).slice(0,3).map(String);
+ const wrongS=shuffle(other).map(x=>shellsFromConfig(getConfiguration(x.z)).join(", ")).filter(x=>x!==shells.join(", ")).slice(0,3);
+ return [
+  {q:`${e.name} có số hiệu nguyên tử là bao nhiêu?`,a:String(e.z),opts:[String(e.z),...wrongZ]},
+  {q:`Ký hiệu hóa học của ${e.vi} là gì?`,a:e.sym,opts:[e.sym,...wrongSym]},
+  {q:`${e.name} nằm ở chu kỳ nào?`,a:String(e.period),opts:[String(e.period),...wrongP]},
+  {q:`${e.name} nằm ở nhóm nào trong bảng tuần hoàn?`,a:String(e.group),opts:[String(e.group),...wrongG]},
+  {q:`Phân bố electron theo lớp của ${e.sym} là gì?`,a:shells.join(", "),opts:[shells.join(", "),...wrongS]}
+ ].map(x=>({...x,opts:shuffle([...new Set(x.opts)])}));
+}
+function showElement(z){
+ const e=byZ[z];current=e;
+ const data=getConfiguration(z),config=configText(data),shells=shellsFromConfig(data);
+ const c=category(e),links=linksFor(e);
+ const detail=$("details");
+ detail.innerHTML=`
+  <div class="detail-head">
+   <div><div class="big-symbol">${e.sym}</div><div class="big-z">Z = ${e.z}</div></div>
+   <div>
+    <h2>${e.name} — ${e.vi}</h2>
+    <div class="pills">
+     <span class="pill">${categoryNames[c]}</span>
+     <span class="pill">Chu kỳ ${e.period}</span>
+     <span class="pill">Nhóm ${e.group}</span>
+     <span class="pill">Khối lượng ≈ ${e.mass}</span>
+    </div>
+    <p class="muted">Nguyên tử trung hòa có ${e.z} proton và ${e.z} electron.</p>
+   </div>
+  </div>
+  <div class="info-grid" style="margin-top:16px">
+   <div class="mini">
+    <h3>⚛ Cấu hình electron</h3>
+    <p class="config">${config}</p>
+    <p class="muted">Cấu hình đầy đủ theo thứ tự phân lớp được điền electron.</p>
+    <h3>Phân bố electron theo lớp</h3>
+    <div class="shell-list">${shells.map((n,i)=>`<span>Lớp ${i+1}: <b>${n}</b></span>`).join("")}</div>
+    <p>Electron lớp ngoài cùng theo sơ đồ này: <b>${getValence(shells)}</b></p>
+   </div>
+   <div class="mini">
+    <h3>🪐 Mô hình Bohr</h3>
+    <div class="bohr-layout">
+     <div>${drawBohr(e,shells)}</div>
+     <div>
+      <p><b>${e.sym}</b> — ${e.z} electron</p>
+      <p class="muted">Mỗi vòng biểu diễn một lớp electron; chấm xanh là electron trong sơ đồ.</p>
+      <p class="muted">Sơ đồ không thể hiện đúng kích thước, hình dạng orbital hoặc chuyển động thực của electron.</p>
+     </div>
+    </div>
+   </div>
+   <div class="mini">
+    <h3>🔬 Ứng dụng</h3>
+    <p>${application(e)}</p>
+   </div>
+   <div class="mini">
+    <h3>🧪 Hoạt động quan sát an toàn</h3>
+    <p>${safeActivity(e)}</p>
+    <p class="muted">Không cần mua hóa chất hay tự thực hiện phản ứng. Với nguyên tố nguy hiểm/phóng xạ, chỉ dùng tư liệu và mô phỏng.</p>
+   </div>
+  </div>
+  <div class="mini" style="margin-top:14px">
+   <h3>🔎 Tư liệu để tìm hiểu thêm</h3>
+   <div class="link-list">
+    <a href="${links.video}" target="_blank" rel="noopener noreferrer">▶ Tìm video giải thích</a>
+    <a href="${links.image}" target="_blank" rel="noopener noreferrer">▧ Tìm hình ảnh</a>
+    <a href="${links.wiki}" target="_blank" rel="noopener noreferrer">↗ Bách khoa toàn thư</a>
+   </div>
+   <p class="muted">Các liên kết trên mở trang tìm kiếm/tài liệu tham khảo; hãy ưu tiên nguồn khoa học, trường đại học hoặc cơ quan nghiên cứu.</p>
+  </div>
+  <div class="mini" style="margin-top:14px">
+   <h3>🧠 5 câu hỏi luyện tập</h3>
+   <p class="muted">Chọn một đáp án cho từng câu. Mỗi câu đúng được 1 điểm.</p>
+   <div id="quiz"></div>
+   <div class="result" id="quizResult" aria-live="polite"></div>
+   <button id="checkQuiz" style="margin-top:10px">Chấm điểm</button>
+   <button id="newQuiz" style="margin-top:10px">Tạo bộ câu hỏi mới</button>
+  </div>`;
+ document.querySelectorAll(".element").forEach(b=>b.classList.toggle("selected",+b.dataset.z===z));
+ renderQuiz(e,shells);
+}
+function renderQuiz(e,shells){
+ const bank=questionBank(e,shells);
+ quizAnswers=Array(bank.length).fill(null);quizScore=0;
+ const root=$("quiz");root.innerHTML="";
+ bank.forEach((q,i)=>{
+  const wrap=document.createElement("div");wrap.className="quiz-q";
+  const title=document.createElement("b");title.textContent=`${i+1}. ${q.q}`;
+  wrap.appendChild(title);
+  const options=document.createElement("div");options.className="options";
+  q.opts.forEach(opt=>{
+   const b=document.createElement("button");b.textContent=opt;
+   b.addEventListener("click",()=>{
+    quizAnswers[i]=opt;
+    options.querySelectorAll("button").forEach(x=>x.style.outline="");
+    b.style.outline="2px solid #7dd3fc";
+   });
+   options.appendChild(b);
+  });
+  wrap.appendChild(options);
+  root.appendChild(wrap);
+ });
+ $("quizResult").textContent="";
+ $("checkQuiz").onclick=()=>{
+  let score=0,answered=0;
+  [...root.querySelectorAll(".quiz-q")].forEach((wrap,i)=>{
+   const q=bank[i];
+   wrap.querySelectorAll("button").forEach(b=>{
+    b.classList.remove("correct","wrong");
+    if(b.textContent===q.a)b.classList.add("correct");
+    if(b.textContent===quizAnswers[i]&&b.textContent!==q.a)b.classList.add("wrong");
+   });
+   if(quizAnswers[i]!==null)answered++;
+   if(quizAnswers[i]===q.a)score++;
+  });
+  $("quizResult").textContent=`Kết quả: ${score}/5 câu đúng. Bạn đã trả lời ${answered}/5 câu.`;
+ };
+ $("newQuiz").onclick=()=>renderQuiz(e,shells);
+}
+makeTable();
+showElement(1);
+</script>
+</body>
+</html>
